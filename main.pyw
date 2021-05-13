@@ -5,5 +5,5 @@ try:
     ui=userInterface(reader=reader)
     ui.mainLoop()
 except Exception as e:
-    with open('routeTrackerErrorLog.txt','r') as f:
-        f.write(e)
+    with open('routeTrackerErrorLog.txt','w') as f:
+        f.write(str(e))
