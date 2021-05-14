@@ -5,10 +5,11 @@ import time
 import math
 import pickle
 import winsound
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename,askdirectory
 from tkinter import messagebox
 import os
 import pyperclip
+import webbrowser
 class POINT(ctypes.Structure):
     _fields_ = [("x", ctypes.c_ulong), ("y", ctypes.c_ulong)]
 
@@ -24,7 +25,7 @@ class userInterface():
     def __init__(self,reader):
         user32 = ctypes.windll.user32
         width,height = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
-        dataTemplate={'window position':[width/2-250,height/4],'route positions':{},'showType':'show','topmost':1}
+        dataTemplate={'window position':[width/2-250,height/4],'route positions':{},'showType':'show','topmost':1,'alarm':True,'logLocation':''}
         self.exiting=False
         #self.logReader=reader
         self.maxCountdown = 60 * 21
@@ -54,7 +55,7 @@ class userInterface():
         self.draggingPos=[width/2-250,height/4]
         
         
-
+       
 
 
         try:
@@ -85,7 +86,8 @@ class userInterface():
             self.openFile(dialogue = False)
 
 
-
+        if self.data['logLocation'] != '':
+            self.logReader.folderLocation=self.data['logLocation']
         self.createWindow()
 
 
@@ -129,6 +131,10 @@ class userInterface():
                 self.saveData()
                 self.window.destroy()
                 self.root.destroy()
+                try:
+                    self.settingsWindow.destroy()
+                except:
+                    print('settings window does not yet exist')
                 break
             #self.menu.update()
             currentTime=time.time()
@@ -156,6 +162,7 @@ class userInterface():
                                 self.clear()
                             except Exception as e:
                                 print(e)
+                            break
 
 
             try:
@@ -187,6 +194,11 @@ class userInterface():
                 else:
                     self.exiting=True
                     print(e)
+
+            try:
+                self.settingsWindow.update()
+            except:
+                pass
 
     def showHide(self):
         if self.data['showType']=='show':
@@ -251,40 +263,6 @@ class userInterface():
 
 
 
-    def exiting(self):
-
-
-        exit()
-
-    def hide(self):
-
-        self.hidden=True
-        print(self.hidden)
-        self.root.destroy()
-
-    def confirm(self):
-
-        self.confirmed = True
-
-
-
-    def jump(self):
-
-        if self.position < len(self.currentFileData) -1:
-            self.position += 1
-            self.data[self.currentFile] = self.position
-            if self.currentFileData != "None":
-                pyperclip.copy(self.currentFileData[self.position][0])
-            self.saveData()
-            self.clear()
-        
-        self.start=time.time()
-
-
-        self.confirmed = False
-
-    def close(self):
-        self.root.destroy()
 
 
 
@@ -339,7 +317,7 @@ class userInterface():
         timeSince=self.maxCountdown - timeSince
         
         if timeSince > 0:
-            if timeSince < 10:
+            if timeSince < 10 and self.data['alarm']:
                 winsound.Beep(3000,100)
             mins=str(round(timeSince//60))
             seconds=str(math.floor(timeSince % 60))
@@ -358,7 +336,7 @@ class userInterface():
 
         self.canvas.create_text(x+440,y+5,text= '📁',font="Ebrima 13 bold",fill='orange',anchor='nw')
 
-        self.canvas.create_text(x+463,y+5,text= '⚙',font="Ebrima 13 bold",fill='gray',anchor='nw')
+        self.canvas.create_text(x+463,y+5,text= '⚙',font="Ebrima 13 bold",fill='orange',anchor='nw')
         if self.data['topmost']==1:
             self.canvas.create_text(x+485,y+5,text= '⮝',font="Ebrima 13 bold",fill='orange',anchor='nw')
         
@@ -429,6 +407,7 @@ class userInterface():
                 self.openFile()
             #settings
             elif relX > 463 and relX <485:
+                self.settings()
                 pass
 
             #minimise
@@ -489,6 +468,104 @@ class userInterface():
 
         self.clear()
 
+
+    #settings window
+    def alarm(self):
+        self.data['alarm']=not self.data['alarm']
+        self.saveData()
+        self.alarmButton.config(text='Alarm: '+ str(self.data['alarm']))
+    def logLocation(self):
+
+
+        self.data['logLocation'] = askdirectory()
+        print(self.data['logLocation'])
+        if self.data['logLocation'] != '':
+            self.logReader.folderLocation=self.data['logLocation']
+        else:
+            self.logReader.defaultLocation()
+
+        self.saveData()
+        self.logLocationLabel.config(text=self.logReader.folderLocation)
+    def settings(self):
+        try:
+            self.settingsWindow.destroy()
+        except:
+            print('settings window does not yet exist')
+
+        self.settingsWindow=tk.Tk()
+        self.settingsWindow.title('Settings')
+        self.settingsWindow.config(bg='black')
+        
+
+        
+        settingsLabel=tk.Label(self.settingsWindow,text='Settings\n',font="Ebrima 15 bold",fg='orange',bg='black')
+        settingsLabel.grid(row=0,column=0,columnspan = 2)
+
+        #log reader file path
+        openBrowserButton=tk.Button(self.settingsWindow,
+                                   text='Log File Location',
+                                   font="Ebrima 13 bold",
+                                   fg='orange',
+                                   activeforeground='orange',
+                                   bg='#222222',
+                                   activebackground='#111111',
+                                   width=25,
+                                   command=self.logLocation)
+        openBrowserButton.grid(row=1,column=0)
+        self.logLocationLabel=tk.Label(self.settingsWindow,text=self.logReader.folderLocation,font="Ebrima 15 bold",fg='orange',bg='black')
+        self.logLocationLabel.grid(row=1,column=1)
+
+        #alarm
+        
+        self.alarmButton=tk.Button(self.settingsWindow,
+                                   text='Alarm: '+ str(self.data['alarm']),
+                                   font="Ebrima 13 bold",
+                                   fg='orange',
+                                   activeforeground='orange',
+                                   bg='#333333',
+                                   activebackground='#222222',
+                                   width=25,
+                                   command=self.alarm)
+        self.alarmButton.grid(row=2,column=0)
+        #non tritium goods in carrier
+        carrierGoods=tk.Button(self.settingsWindow,
+                                   text='Carrier Goods',
+                                   font="Ebrima 13 bold",
+                                   fg='orange',
+                                   activeforeground='orange',
+                                   bg='#222222',
+                                   activebackground='#111111',
+                                   width=25,
+                                   )
+        carrierGoods.grid(row=3,column=0)
+
+        self.carrierGoodsEntry=tk.Entry(self.settingsWindow,bg='#222222',fg='orange',bd=0,font="Ebrima 13 bold")
+        self.carrierGoodsEntry.insert ( 0, '0' )
+        self.carrierGoodsEntry.grid(row=3,column=1)
+        #non tritium goods in ship
+        shipGoods=tk.Button(self.settingsWindow,
+                                   text='Ship Goods',
+                                   font="Ebrima 13 bold",
+                                   fg='orange',
+                                   activeforeground='orange',
+                                   bg='#333333',
+                                   activebackground='#222222',
+                                   width=25,
+                                   )
+        shipGoods.grid(row=4,column=0)
+        #Thanks
+        
+        
+        invite=tk.Button(self.settingsWindow,
+                                   text="With thanks to the Fleet Carrier Owner's Club",
+                                   font="Ebrima 13 bold",
+                                   fg='orange',
+                                   activeforeground='orange',
+                                   bg='#222222',
+                                   activebackground='#111111',
+                                   width=50,
+                                   command=lambda: webbrowser.open('https://discord.gg/tcMPHfh'))
+        invite.grid(row=5,column=0,columnspan=2)
 
 
 

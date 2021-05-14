@@ -7,10 +7,12 @@ class logReader():
     def __init__(self,checkFrequency=60,folderLocation=None):
         self.resetValues()
         self.folderLocation=folderLocation
-        
-            
         if self.folderLocation == None:
-            self.folderLocation='C:\\Users\\'+os.getlogin()+'\Saved Games\Frontier Developments\Elite Dangerous'
+            self.defaultLocation()
+        
+    def defaultLocation(self):      
+        
+        self.folderLocation='C:\\Users\\'+os.getlogin()+'\Saved Games\Frontier Developments\Elite Dangerous'
 
 
     def resetValues(self):
