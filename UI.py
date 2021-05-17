@@ -55,7 +55,8 @@ class userInterface():
         self.draggingPos=[width/2-250,height/4]
         
         
-       
+        self.scrollTop=[0,0]
+        self.scrollBottom=[0,0]
 
 
         try:
@@ -349,6 +350,8 @@ class userInterface():
 
             self.canvas.create_rectangle(x+10,y+160,x+510,y+270,fill='#111111',outline='#333333')
 
+            self.canvas.create_rectangle(x+10,y+280,x+510,y+540,fill='#111111',outline='#333333')
+
             
             above=True
             for i in [0]+self.stopLocations:
@@ -495,8 +498,8 @@ class userInterface():
                 
             
         except Exception as e:
-            print(e)
-            pass#self.canvas.create_rectangle(x,y+35,x+520,y+600,fill='black',outline='orange')
+            #print(e)
+            self.canvas.create_rectangle(x,y+35,x+520,y+600,fill='black',outline='orange')
     def mouseDown(self,values):
         #print(values)
         self.startDrag=time.time()
