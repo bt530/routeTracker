@@ -1,6 +1,5 @@
 import tkinter as tk
 import ctypes
-#import vkmod
 import time
 import math
 import pickle
@@ -25,7 +24,7 @@ class userInterface():
     def __init__(self,reader):
         user32 = ctypes.windll.user32
         width,height = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
-        dataTemplate={'window position':[width/2-250,height/4],'route positions':{},'showType':'show','topmost':1,'alarm':True,'logLocation':''}
+        dataTemplate={'window position':[width/2-250,height/4],'route positions':{},'showType':'show','topmost':1,'alarm':True,'logLocation':'','shipCargo':0,'carrierCargo':0,'more':False}
         self.exiting=False
         #self.logReader=reader
         self.maxCountdown = 60 * 21
@@ -33,20 +32,21 @@ class userInterface():
         self.logCheck = 30
         self.logReader=reader
 
+        self.scroll=0
 
         self.dragOffset=[0,0]
+        self.scrolling = False
 
-
-
+        self.stopLocations=[]
         
         self.countdown = self.maxCountdown
         self.countdownStart=time.time()
         self.logStart=0
 
 
-        self.currentFileData = None
+        self.currentFileData = [['unknown']]
         self.system = None
-        self.nextSystem = 'Unknown'
+        self.nextSystem = 'unknown'
         self.currentFile = None
 
         self.position=0
@@ -84,42 +84,16 @@ class userInterface():
             self.currentFile = self.data["current file"]
 
             self.openFile(dialogue = False)
-
+            
+        
+        
 
         if self.data['logLocation'] != '':
             self.logReader.folderLocation=self.data['logLocation']
         self.createWindow()
 
 
-        """
-
-        self.confirmed = False
-        self.cSwitch='red'#
-
-        
-        self.menu=tk.Tk()
-        self.menu.geometry('200x400')
-
-        if self.data['showType'] == 'show':
-            self.showButton=tk.Button(self.menu,command=self.showHide,text='Hide Overlay')
-        if self.data['showType'] == 'hide':
-            self.showButton=tk.Button(self.menu,command=self.showHide,text='Show Overlay')
-
-        self.showButton.pack()
-
-        self.openButton=tk.Button(self.menu,command=self.openFile,text="Open")
-
-        self.openButton.pack()
-
-        self.exButton=tk.Button(self.menu,command=self.exiting,text="Exit")
-        self.exButton.pack()
-
-        self.timerButton=tk.Button(self.menu,command=self.confirm,text='',bg='gray')
-
-        self.timerButton.pack()
-        if self.data['showType']=='show':
-        """
-        
+    
 
 
 
@@ -127,94 +101,97 @@ class userInterface():
         topSet=-1
         timeLoop=time.time()
         while True:
-            if self.exiting:
-                self.saveData()
-                self.window.destroy()
-                self.root.destroy()
-                try:
-                    self.settingsWindow.destroy()
-                except:
-                    print('settings window does not yet exist')
-                break
-            #self.menu.update()
-            currentTime=time.time()
-            if currentTime-self.logStart > self.logCheck and self.currentFileData != None:
-                self.logStart=currentTime
-                self.logReader.updateLog()
-                print(self.logReader.oldSystem,self.logReader.currentSystem)
-                if self.logReader.oldSystem != self.logReader.currentSystem:
-                    print("Jumped to "+self.logReader.currentSystem)
-                    self.nextSystem='unknown'
-                    for i in range(self.position,len(self.currentFileData)-1):
-                        #print(i)
-                        #print(ui.currentFileData[i])
-                        if self.currentFileData[i][0] == self.logReader.currentSystem:
-                            self.nextSystem=self.currentFileData[i+1][0]
-                            pyperclip.copy(self.nextSystem)
-                            print('copied ' + self.nextSystem + ' to clipboard')
-                            if self.currentFileData[i+1][0] == self.currentFileData[i][0]:
-                                self.position=i+1
-                            else:
-                                self.position=i
-                            self.data['route positions'][self.currentFile] = self.position
-                            self.saveData()
-                            try:
-                                self.clear()
-                            except Exception as e:
-                                print(e)
-                            break
-
-
+            time.sleep(0.01)
             try:
-                self.root.update()
-                if self.dragging:
-                    x,y=mousePosition()
-                    self.data['window position']=[x-self.dragOffset[0],y-self.dragOffset[1]]
-                    self.clear()
-                elif currentTime - timeLoop >1:
-                    self.clear()
-                    timeLoop = currentTime
-                """
-                if self.data['topmost'] == 0:
-                    if not self.window.focus_displayof():
-                        if topSet != 0:
-                            self.window.attributes('-topmost', 0)
-                            topSet=0
-                        
-                    elif topSet != 1:
-                        self.window.attributes('-topmost', 1)
-                        topSet=1
-                    #print(topSet)
-                """
-                
-                
-            except Exception as e:
-                if e == SystemExit:
+                test=pyperclip.paste()
+                if self.exiting:
+                    self.saveData()
+                    self.window.destroy()
+                    self.root.destroy()
+                    try:
+                        self.settingsWindow.destroy()
+                    except:
+                        print('settings window does not yet exist')
                     break
-                else:
-                    self.exiting=True
-                    print(e)
+                #self.menu.update()
+                currentTime=time.time()
+                if currentTime-self.logStart > self.logCheck and self.currentFileData != None:
+                    self.logStart=currentTime
+                    self.logReader.updateLog()
+                    print(self.logReader.oldSystem,self.logReader.currentSystem)
+                    if self.logReader.oldSystem != self.logReader.currentSystem:
+                        print("Jumped to "+self.logReader.currentSystem)
+                        self.nextSystem='unknown'
+                        for i in range(self.position,len(self.currentFileData)-1):
+                            #print(i)
+                            #print(ui.currentFileData[i])
+                            if self.currentFileData[i][0] == self.logReader.currentSystem:
 
-            try:
-                self.settingsWindow.update()
-            except:
-                pass
+                                print('copied ' + self.nextSystem + ' to clipboard')
+                                if self.currentFileData[i+1][0] == self.currentFileData[i][0]:
+                                    self.position=i+1
+                                    print('double')
+                                else:
+                                    self.position=i
+                                self.nextSystem=self.currentFileData[self.position+1][0]
+                                pyperclip.copy(self.nextSystem)
+                                self.data['route positions'][self.currentFile] = self.position
+                                self.saveData()
+                                try:
+                                    self.clear()
+                                except Exception as e:
+                                    print(e)
+                                break
+                    
 
-    def showHide(self):
-        if self.data['showType']=='show':
-            self.data['showType']='hide'
-            self.showButton.config(text='Show Overlay')
-            self.saveData()
-            try:
-                self.close()
-            except Exception as e:
-                print(e)
 
-        elif self.data['showType']=='hide':
-            self.data['showType']='show'
-            self.showButton.config(text='Hide Overlay')
-            self.saveData()
-            self.createWindow()
+                try:
+                    self.root.update()
+                    x,y=mousePosition()
+                    if self.dragging:
+                        
+                        self.data['window position']=[x-self.dragOffset[0],y-self.dragOffset[1]]
+                        self.clear()
+                    elif self.scrolling:
+                        proportion = (y - self.barCentre - self.scrollTop[1])/self.scrollHeight
+                        self.scroll = round(proportion * len(self.currentFileData) - self.position)
+                        if self.scroll + self.position < 0:
+                            self.scroll = -self.position
+                        if self.scroll + self.position >= len(self.currentFileData) - self.scrollLength:
+                            self.scroll = len(self.currentFileData) - self.position -1 - self.scrollLength
+                        self.clear()
+                    elif currentTime - timeLoop >1:
+                        self.clear()
+                        timeLoop = currentTime
+                    """
+                    if self.data['topmost'] == 0:
+                        if not self.window.focus_displayof():
+                            if topSet != 0:
+                                self.window.attributes('-topmost', 0)
+                                topSet=0
+                            
+                        elif topSet != 1:
+                            self.window.attributes('-topmost', 1)
+                            topSet=1
+                        #print(topSet)
+                    """
+                    
+                    
+                except Exception as e:
+                    if e == SystemExit:
+                        break
+                    else:
+                        self.exiting=True
+                        print(e)
+
+                try:
+                    self.settingsWindow.update()
+                except:
+                    pass
+            except pyperclip.PyperclipWindowsException :
+                time.sleep(2)
+
+
 
     def openFile(self,dialogue = True):
 
@@ -241,6 +218,13 @@ class userInterface():
                 self.currentFileData = [i.split(",") for i in self.currentFileData]
                 #print(currentFileData)
                 del self.currentFileData[0]
+
+                self.stopLocations=[]
+                for i in range(len(self.currentFileData)-1):
+                    if self.currentFileData[i][0] == self.currentFileData[i+1][0]:
+                        self.stopLocations.append(i)
+                    #print(self.currentFileData[i])
+                #print(self.stopLocations)
             except FileNotFoundError as e:
                 
                     messagebox.showerror("Import Error", e)
@@ -252,6 +236,8 @@ class userInterface():
 
 
                 self.createWindow()
+
+                
 
             
 
@@ -332,7 +318,7 @@ class userInterface():
 
         self.canvas.create_text(x+350,y+5,text=text,font="Ebrima 13 bold",fill='orange',anchor='nw')
 
-        self.canvas.create_text(x+420,y+5,text= '☰',font="Ebrima 13 bold",fill='gray',anchor='nw')
+        self.canvas.create_text(x+420,y+5,text= '☰',font="Ebrima 13 bold",fill='orange',anchor='nw')
 
         self.canvas.create_text(x+440,y+5,text= '📁',font="Ebrima 13 bold",fill='orange',anchor='nw')
 
@@ -347,50 +333,195 @@ class userInterface():
 
         self.canvas.create_line(x,y,x+520,y,fill='orange')
         self.canvas.create_line(x,y+30,x+520,y+30,fill='orange')
+        if self.data['more']:
+            self.createDashboard()
 
-        
-        
 
-        """
-        if currentFileData != "None":
-            jumpsDone = str(position)
-            jumpsLeft = str(len(currentFileData) - position)
-            distance = str(round(float(currentFileData[position][2])))
-            tankFuel = str(currentFileData[position][3])
-            cargoFuel = str(currentFileData[position][4])
-            message="Jumps Done: "  + jumpsDone + " | Jumps Left: " + jumpsLeft + " | Distance Remaining: " + distance + " | Fuel in Tank: " + tankFuel + " | Fuel in Cargo: " + cargoFuel
+    def createDashboard(self):
+        
+        x,y=self.data['window position'][0],self.data['window position'][1]
+        try:
+            self.canvas.create_rectangle(x,y+35,x+520,y+600,fill='black',outline='orange')
             
-            
-            numberLabel=tk.Button(canvas,text=message)
-            numberLabel.pack(anchor="nw",side="left")
-        
-        global timerButton
-        """
-        """
-        numberLabel=tk.Button(canvas,text="Jump Number: ")
-        numberLabel.pack(anchor="nw",side="left")
 
-        global number
-        number=tk.Entry(canvas)
-        number.pack(anchor="nw",side="left")
-        """
-    def drag(self,values):
+            #pannel backgrounds
+            self.canvas.create_rectangle(x+10,y+40,x+510,y+150,fill='#111111',outline='#333333')
+
+            self.canvas.create_rectangle(x+10,y+160,x+510,y+270,fill='#111111',outline='#333333')
+
+            
+            above=True
+            for i in [0]+self.stopLocations:
+                horPos=i/len(self.currentFileData)*480+20
+                if above:
+                    
+                    
+                    self.canvas.create_rectangle(x+horPos-8,y+45,x+500,y+80,fill='#111111',outline='#111111')
+                    self.canvas.create_line(x+horPos,y+70,x+horPos,y+80,fill='orange')
+                    self.canvas.create_text(x+horPos,y+60,text=self.currentFileData[i][0]+"   ",font="Ebrima 8 bold",fill='orange',anchor='w')
+                else:
+                    
+                    self.canvas.create_rectangle(x+horPos-8,y+80,x+500,y+120,fill='#111111',outline='#111111')
+                    self.canvas.create_line(x+horPos,y+80,x+horPos,y+90,fill='orange')
+                    self.canvas.create_text(x+horPos,y+95,text= self.currentFileData[i][0]+"   ",font="Ebrima 8 bold",fill='orange',anchor='w')
+                    
+                above=not above
+            horPos=500
+            if above:
+                
+                
+                self.canvas.create_rectangle(x+horPos-10,y+45,x+500,y+80,fill='#111111',outline='#111111')
+                self.canvas.create_line(x+horPos,y+70,x+horPos,y+80,fill='orange')
+                self.canvas.create_text(x+horPos,y+60,text= "   "+self.currentFileData[-2][0],font="Ebrima 8 bold",fill='orange',anchor='e')
+            else:
+                
+                self.canvas.create_rectangle(x+horPos-10,y+80,x+500,y+120,fill='#111111',outline='#111111')
+                self.canvas.create_line(x+horPos,y+80,x+horPos,y+90,fill='orange')
+                self.canvas.create_text(x+horPos,y+95,text= "   "+self.currentFileData[-2][0],font="Ebrima 8 bold",fill='orange',anchor='e')
+            #print(self.stopLocations)
+            self.canvas.create_line(x+20,y+80,x+500,y+80,fill='orange',width=2)
+
+            self.canvas.create_oval(x+15,y+75,x+25,y+85,fill='orange',outline='orange')
+
+            self.canvas.create_oval(x+495,y+75,x+505,y+85,fill='orange',outline='orange')
+
+            self.canvas.create_text(x+20,y+130,text= "Jumps | Completed: "+str(self.position),font="Ebrima 13 bold",fill='orange',anchor='w')
+            for i in self.stopLocations:
+                diff=i-self.position
+                if diff >= 0:
+                    self.canvas.create_text(x+220,y+130,text= "| To Waypoint: "+str(diff),font="Ebrima 13 bold",fill='orange',anchor='w')
+                    break
+            self.canvas.create_text(x+380,y+130,text= "| Left: "+str(len(self.currentFileData)-self.position),font="Ebrima 13 bold",fill='orange',anchor='w')
+            for i in self.stopLocations:
+                horPos=i/len(self.currentFileData)*480+20
+                self.canvas.create_oval(x+horPos-3,y+77,x+horPos+3,y+83,fill='orange',outline='orange')
+                #print('h',horPos)
+            #print(self.stopLocations)
+            horPos=self.position/len(self.currentFileData)*480+20
+            self.canvas.create_polygon(x+horPos-5,y+85,x+horPos,y+75,x+horPos+5,y+85,fill='#00ff00',outline='#00ff00')
+
+            reqFuel=self.currentFileData[self.position][4]
+            
+            reqFuel=int(reqFuel)
+            if reqFuel > 0:
+                reqFuel += 1000
+            else:
+                for i in range(self.position,len(self.currentFileData)):
+                    reqFuel += int(self.currentFileData[i][5])
+                reqFuel -= int(self.currentFileData[self.position][5])
+
+            tankFuel=self.logReader.carrierFuel
+            shipFuel=self.logReader.shipInventory-self.data['shipCargo']
+            carrierFuel=self.logReader.carrierInventory-self.data['carrierCargo']
+            self.canvas.create_text(x+20,y+180,text= "Tritium | ",font="Ebrima 13 bold",fill='orange',anchor='w')
+            self.canvas.create_text(x+95,y+180,text= "Tank: "+str(tankFuel),font="Ebrima 13 bold",fill='green',anchor='w')
+            self.canvas.create_text(x+190,y+180,text= "| Ship: "+str(shipFuel),font="Ebrima 13 bold",fill='blue',anchor='w')
+            self.canvas.create_text(x+280,y+180,text= "| Cargo: "+str(carrierFuel),font="Ebrima 13 bold",fill='orange',anchor='w')
+
+            self.canvas.create_text(x+400,y+180,text= "| Min: "+str(reqFuel),font="Ebrima 13 bold",fill='red',anchor='w')
+
+
+            fuelTotal=tankFuel + shipFuel + carrierFuel
+
+            width=max(fuelTotal,reqFuel) / 480
+            
+            self.canvas.create_rectangle(x+20,y+210,x+20+reqFuel/width,y+230,fill='red',outline='red',stipple='gray25')
+            self.canvas.create_rectangle(x+20,y+210,x+20+tankFuel/width,y+230,fill='green',outline='green')
+
+            self.canvas.create_rectangle(x+20+tankFuel/width,y+210,x+20+shipFuel/width+tankFuel/width,y+230,fill='blue',outline='blue')
+
+            self.canvas.create_rectangle(x+20+shipFuel/width+tankFuel/width,y+210,x+20+shipFuel/width+tankFuel/width+carrierFuel/width,y+230,fill='orange',outline='orange')
+
+            self.canvas.create_rectangle(x+20+reqFuel/width-2,y+210,x+20+reqFuel/width,y+230,fill='red',outline='red')
+
+            diff = fuelTotal - reqFuel
+
+            if diff >= 0:
+                self.canvas.create_text(x+260,y+250,text= "You are "+str(diff)+ " Tritium in excess",font="Ebrima 13 bold",fill='green')
+            else:
+                self.canvas.create_text(x+260,y+250,text= "Warning! You are "+str(-diff)+ " Tritium short!",font="Ebrima 13 bold",fill='red')
+            self.canvas.create_text(x+260,y+197,text= "Please note you need to open the carrier management page to update this.",font="Ebrima 8 bold",fill='orange')
+
+            #routeList
+            length=10
+            self.scrollLength=length
+            verticalSpacing=25
+            self.verticalSpacing=verticalSpacing
+            
+            boxHeight=20
+            self.boxHeight=boxHeight
+            startY=290
+
+            self.scrollHeight = verticalSpacing*(length-1)+boxHeight
+
+            barHeight = length/len(self.currentFileData) * self.scrollHeight
+            self.barCentre=barHeight/2
+            barPosition = y+(self.position+self.scroll)/len(self.currentFileData) * self.scrollHeight + startY
+            
+            for i in range(length):
+                if self.position+self.scroll+i < len(self.currentFileData) - 1:
+                    if self.currentFileData[self.position+self.scroll+i][0] == pyperclip.paste():
+                        boxFill='green'
+                        textFill='black'
+                    elif self.scroll+i == 0:
+                        boxFill='orange'
+                        textFill='black'
+                    elif self.position+self.scroll+i in self.stopLocations or self.position+self.scroll+i-1 in self.stopLocations:
+                        boxFill='red'
+                        textFill='black'
+                        
+                    else:
+                        boxFill='black'
+                        textFill='orange'
+
+                    self.canvas.create_rectangle(x+15,y+startY + verticalSpacing*i,x+490,y+startY + verticalSpacing*i+boxHeight,fill=boxFill,outline='orange')
+                    self.canvas.create_text(x+17,y+startY + verticalSpacing*i,text=self.currentFileData[self.position+self.scroll+i][0],font="Ebrima 12 bold",fill=textFill,anchor='nw')
+            self.canvas.create_rectangle(x+497,y+startY,x+505,y+startY + self.scrollHeight,fill='black',outline='orange')
+
+            
+            self.scrollTop=[x+497,y+startY]
+            self.scrollBottom=[x+505,y+startY + verticalSpacing*(length-1)+boxHeight]
+
+            self.canvas.create_rectangle(x+497,barPosition,x+505,barPosition+barHeight,fill='orange',outline='orange')
+
+            for i in self.stopLocations:
+                barPosition = y+i/len(self.currentFileData) * self.scrollHeight + startY
+                self.canvas.create_rectangle(x+497,barPosition,x+505,barPosition+1,fill='red',outline='red')
+
+            barPosition = y+self.position/len(self.currentFileData) * self.scrollHeight + startY
+            self.canvas.create_rectangle(x+497,barPosition,x+505,barPosition+1,fill='orange',outline='orange')
+                
+                    
+                
+            
+        except Exception as e:
+            print(e)
+            pass#self.canvas.create_rectangle(x,y+35,x+520,y+600,fill='black',outline='orange')
+    def mouseDown(self,values):
         #print(values)
-        self.dragging=True
         self.startDrag=time.time()
-        
-        self.dragOffset=[values.x-self.data['window position'][0],values.y-self.data['window position'][1]]
+        if self.scrollTop[0] <= values.x and values.x <= self.scrollBottom[0] and self.scrollTop[1] <= values.y and self.scrollBottom[1] >= values.y and not self.dragging:
+
+            self.scrolling = True
+        elif not self.scrolling:
+            
+            
+            self.dragging=True
+            
+            
+            self.dragOffset=[values.x-self.data['window position'][0],values.y-self.data['window position'][1]]
 
 
             
         
     def endDrag(self,values):
-        self.dragging=False
+        self.dragging = False
+        self.scrolling = False
        
 
-    
+        relX = values.x - self.data['window position'][0]
         if time.time()-self.startDrag < 0.3 and values.y - self.data['window position'][1] < 30:
-            relX = values.x - self.data['window position'][0]
+            
             if relX < 150:
                 pyperclip.copy(self.logReader.currentSystem)
                 print('copied ' + self.logReader.currentSystem + ' to clipboard')
@@ -399,8 +530,10 @@ class userInterface():
                 pyperclip.copy(self.nextSystem)
                 print('copied ' + self.nextSystem + ' to clipboard')
                 
-            #list all jumps
+            #more
             elif relX > 420 and relX <440:
+                self.data['more']=not self.data['more']
+                
                 pass
             #open route
             elif relX > 440 and relX <463:
@@ -420,12 +553,25 @@ class userInterface():
             #close
             elif relX > 500 and relX <520:
                 self.exiting=True
+
+            self.saveData()
+
+        elif time.time()-self.startDrag < 0.3 and 15 < relX and 490 > relX:
+            proportion = (values.y - self.barCentre - self.scrollTop[1])/self.scrollHeight
+            clickedOn=proportion * self.scrollLength
+            pyperclip.copy(self.currentFileData[math.floor(self.position + self.scroll + clickedOn)][0])
                 
                 
-                pass
+
         self.clear()
-        self.saveData()
-    
+
+    def wheel(self,values):
+        self.scroll += round(-values.delta/100)
+        if self.scroll + self.position < 0:
+            self.scroll = -self.position
+        if self.scroll + self.position >= len(self.currentFileData) - self.scrollLength:
+            self.scroll = len(self.currentFileData) - self.position -1 - self.scrollLength
+        self.clear()
     def createWindow(self,onTop=1):
         try:
             self.root.destroy()
@@ -461,8 +607,9 @@ class userInterface():
             self.root.overrideredirect(1)
         
         self.window.wm_attributes("-transparentcolor", "pink")
-        self.window.bind('<ButtonPress-1>',self.drag)
+        self.window.bind('<ButtonPress-1>',self.mouseDown)
         self.window.bind('<ButtonRelease-1>',self.endDrag)
+        self.window.bind("<MouseWheel>", self.wheel)
         
 
 
@@ -486,6 +633,28 @@ class userInterface():
 
         self.saveData()
         self.logLocationLabel.config(text=self.logReader.folderLocation)
+    def cargoChange(self,values):
+        canBeInt=False
+        value=self.carrierGoodsEntry.get()
+        try:
+            value=int(value)
+            canBeInt=True
+        except:
+            pass
+        if canBeInt:
+            self.data['carrierCargo']=value
+
+        canBeInt=False
+        value=self.shipGoodsEntry.get()
+        try:
+            value=int(value)
+            canBeInt=True
+        except:
+            pass
+        if canBeInt:
+            self.data['shipCargo']=value
+
+        self.saveData()
     def settings(self):
         try:
             self.settingsWindow.destroy()
@@ -540,7 +709,7 @@ class userInterface():
         carrierGoods.grid(row=3,column=0)
 
         self.carrierGoodsEntry=tk.Entry(self.settingsWindow,bg='#222222',fg='orange',bd=0,font="Ebrima 13 bold")
-        self.carrierGoodsEntry.insert ( 0, '0' )
+        self.carrierGoodsEntry.insert ( 0, str(self.data['carrierCargo']))
         self.carrierGoodsEntry.grid(row=3,column=1)
         #non tritium goods in ship
         shipGoods=tk.Button(self.settingsWindow,
@@ -553,6 +722,10 @@ class userInterface():
                                    width=25,
                                    )
         shipGoods.grid(row=4,column=0)
+
+        self.shipGoodsEntry=tk.Entry(self.settingsWindow,bg='#222222',fg='orange',bd=0,font="Ebrima 13 bold")
+        self.shipGoodsEntry.insert ( 0, str(self.data['shipCargo']))
+        self.shipGoodsEntry.grid(row=4,column=1)
         #Thanks
         
         
@@ -568,7 +741,10 @@ class userInterface():
         invite.grid(row=5,column=0,columnspan=2)
 
 
+        self.settingsWindow.bind("<KeyRelease>", self.cargoChange)
 
+
+        
 
 
 
