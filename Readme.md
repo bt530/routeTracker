@@ -4,17 +4,26 @@ Download the .csv file and put it somewhere safe.
 BASICS
 
 Run this code and open that csv file.
-When you press the button with the system you are currently in, it will switch to the next system and copy it to your clipboard ready to paste in to the galaxy map.
-Data will also be shown so you can keep an eye on your fuel usage and make sure you have enough.
+The next system should automatically get copied to your clipboard each time you jump.
 
 
+☰ - MORE
+  
+  Use this to view additional stats, such as your route and your fuel.
+  
+  
+📁 - OPEN
 
-TIMER
-
-When the next system is copied to your clipboard, a 21 minute timer is started as a countdown until you can plot the next jump. An alarm will go off when it is ready. 
-To disable the alarm click on the timer.
-
-
-HIDE
-
-Press hide to make the overlay dissapear. It will come back when you have 30 seconds to the next jump.
+  Open a csv file to track the route
+  
+  
+ ⚙ - SETTINGS
+ 
+  Set the file path for the game's log files (if not in the default place)
+  Turn the alarm on and off
+  Choose how many resources you want to set aside and not be included in fuel calculations (Tritium or otherwise)
+  
+ 
+ ⮝ - PIN
+ 
+   Up means always on top, down behaves like a typical window
