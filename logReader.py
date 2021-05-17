@@ -12,8 +12,10 @@ class logReader():
         
     def defaultLocation(self):      
         
-        self.folderLocation='C:\\Users\\'+os.getlogin()+'\Saved Games\Frontier Developments\Elite Dangerous'
-
+        #self.folderLocation='C:\\Users\\'+os.getlogin()+'\\Saved Games\\Frontier Developments\\Elite Dangerous'
+        self.folderLocation=os.environ['USERPROFILE'] + '\\Saved Games\\Frontier Developments\\Elite Dangerous'
+        print(os.environ['USERPROFILE'])
+        print(self.folderLocation)
 
     def resetValues(self):
         self.firstCheck=True
@@ -45,7 +47,7 @@ class logReader():
             if directory[i] == self.activeFile:
                 activeFileReached=True
 
-            if directory[i].split('.')[-1] == 'log':
+            if directory[i].split('.')[-1] == 'log' or directory[i].split(',')[-1]:
                 if activeFileReached == False:
                     self.activeFile=directory[i]
                     activeFileReached=True

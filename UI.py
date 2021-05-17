@@ -153,7 +153,7 @@ class userInterface():
                         
                         self.data['window position']=[x-self.dragOffset[0],y-self.dragOffset[1]]
                         self.clear()
-                    elif self.scrolling:
+                    elif self.scrolling and self.scrollLength < len(self.currentFileData):
                         proportion = (y - self.barCentre - self.scrollTop[1])/self.scrollHeight
                         self.scroll = round(proportion * len(self.currentFileData) - self.position)
                         if self.scroll + self.position < 0:
@@ -457,7 +457,7 @@ class userInterface():
 
             self.scrollHeight = verticalSpacing*(length-1)+boxHeight
 
-            barHeight = length/len(self.currentFileData) * self.scrollHeight
+            barHeight = min(length/len(self.currentFileData) * self.scrollHeight,self.scrollHeight)
             self.barCentre=barHeight/2
             barPosition = y+(self.position+self.scroll)/len(self.currentFileData) * self.scrollHeight + startY
             
@@ -560,7 +560,7 @@ class userInterface():
             self.saveData()
 
         elif time.time()-self.startDrag < 0.3 and 15 < relX and 490 > relX:
-            proportion = (values.y - self.barCentre - self.scrollTop[1])/self.scrollHeight
+            proportion = (values.y - self.scrollTop[1])/self.scrollHeight
             clickedOn=proportion * self.scrollLength
             pyperclip.copy(self.currentFileData[math.floor(self.position + self.scroll + clickedOn)][0])
                 
@@ -569,12 +569,14 @@ class userInterface():
         self.clear()
 
     def wheel(self,values):
-        self.scroll += round(-values.delta/100)
-        if self.scroll + self.position < 0:
-            self.scroll = -self.position
-        if self.scroll + self.position >= len(self.currentFileData) - self.scrollLength:
-            self.scroll = len(self.currentFileData) - self.position -1 - self.scrollLength
-        self.clear()
+        
+        if self.scrollLength < len(self.currentFileData):
+            self.scroll += round(-values.delta/100)
+            if self.scroll + self.position < 0:
+                self.scroll = -self.position
+            if self.scroll + self.position >= len(self.currentFileData) - self.scrollLength:
+                self.scroll = len(self.currentFileData) - self.position -1 - self.scrollLength
+            self.clear()
     def createWindow(self,onTop=1):
         try:
             self.root.destroy()
