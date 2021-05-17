@@ -9,6 +9,7 @@ from tkinter import messagebox
 import os
 import pyperclip
 import webbrowser
+import traceback
 class POINT(ctypes.Structure):
     _fields_ = [("x", ctypes.c_ulong), ("y", ctypes.c_ulong)]
 
@@ -21,11 +22,12 @@ def mousePosition():
     return int(pt.x),int(pt.y)
 class userInterface():
 
-    def __init__(self,reader):
+    def __init__(self,reader,debug=False):
         user32 = ctypes.windll.user32
         width,height = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
         dataTemplate={'window position':[width/2-250,height/4],'route positions':{},'showType':'show','topmost':1,'alarm':True,'logLocation':'','shipCargo':0,'carrierCargo':0,'more':False}
         self.exiting=False
+        self.debug=debug
         #self.logReader=reader
         self.maxCountdown = 60 * 21
         
@@ -118,7 +120,12 @@ class userInterface():
                 currentTime=time.time()
                 if currentTime-self.logStart > self.logCheck and self.currentFileData != None:
                     self.logStart=currentTime
-                    self.logReader.updateLog()
+                    try:
+                        self.logReader.updateLog()
+                    except Exception as e:
+                        if self.debug:
+                            messagebox.showerror("Error", e)
+                        pass
                     print(self.logReader.oldSystem,self.logReader.currentSystem)
                     if self.logReader.oldSystem != self.logReader.currentSystem:
                         print("Jumped to "+self.logReader.currentSystem)
@@ -138,32 +145,33 @@ class userInterface():
                                 pyperclip.copy(self.nextSystem)
                                 self.data['route positions'][self.currentFile] = self.position
                                 self.saveData()
-                                try:
-                                    self.clear()
+                                #try:
+                                self.clear()
+                                """
                                 except Exception as e:
-                                    print(e)
+                                    print(e)"""
                                 break
                     
 
 
-                try:
-                    self.root.update()
-                    x,y=mousePosition()
-                    if self.dragging:
-                        
-                        self.data['window position']=[x-self.dragOffset[0],y-self.dragOffset[1]]
-                        self.clear()
-                    elif self.scrolling and self.scrollLength < len(self.currentFileData):
-                        proportion = (y - self.barCentre - self.scrollTop[1])/self.scrollHeight
-                        self.scroll = round(proportion * len(self.currentFileData) - self.position)
-                        if self.scroll + self.position < 0:
-                            self.scroll = -self.position
-                        if self.scroll + self.position >= len(self.currentFileData) - self.scrollLength:
-                            self.scroll = len(self.currentFileData) - self.position -1 - self.scrollLength
-                        self.clear()
-                    elif currentTime - timeLoop >1:
-                        self.clear()
-                        timeLoop = currentTime
+                #try:
+                self.root.update()
+                x,y=mousePosition()
+                if self.dragging:
+                    
+                    self.data['window position']=[x-self.dragOffset[0],y-self.dragOffset[1]]
+                    self.clear()
+                elif self.scrolling and self.scrollLength < len(self.currentFileData):
+                    proportion = (y - self.barCentre - self.scrollTop[1])/self.scrollHeight
+                    self.scroll = round(proportion * len(self.currentFileData) - self.position)
+                    if self.scroll + self.position < 0:
+                        self.scroll = -self.position
+                    if self.scroll + self.position >= len(self.currentFileData) - self.scrollLength:
+                        self.scroll = len(self.currentFileData) - self.position -1 - self.scrollLength
+                    self.clear()
+                elif currentTime - timeLoop >1:
+                    self.clear()
+                    timeLoop = currentTime
                     """
                     if self.data['topmost'] == 0:
                         if not self.window.focus_displayof():
@@ -177,13 +185,13 @@ class userInterface():
                         #print(topSet)
                     """
                     
-                    
+                """
                 except Exception as e:
                     if e == SystemExit:
                         break
                     else:
                         self.exiting=True
-                        print(e)
+                        print(e)"""
 
                 try:
                     self.settingsWindow.update()
@@ -195,7 +203,7 @@ class userInterface():
 
 
     def openFile(self,dialogue = True):
-
+        self.scroll=0
         if dialogue:
             self.currentFile = askopenfilename()
             self.data["current file"] = self.currentFile
@@ -342,6 +350,7 @@ class userInterface():
         
         x,y=self.data['window position'][0],self.data['window position'][1]
         try:
+
             self.canvas.create_rectangle(x,y+35,x+520,y+600,fill='black',outline='orange')
             
 
@@ -496,10 +505,14 @@ class userInterface():
                 
                     
                 
-            
+           
         except Exception as e:
-            #print(e)
+            if self.debug:
+                messagebox.showerror("Error", e)
+            #print('error creating dashboard',e)
+            
             self.canvas.create_rectangle(x,y+35,x+520,y+600,fill='black',outline='orange')
+            self.canvas.create_text(x+260,y+250,text= traceback.format_exc(),font="Ebrima 13 bold",fill='red')
     def mouseDown(self,values):
         #print(values)
         self.startDrag=time.time()
@@ -644,7 +657,9 @@ class userInterface():
         try:
             value=int(value)
             canBeInt=True
-        except:
+        except Exception as e:
+            if self.debug:
+                messagebox.showerror("Error", e)
             pass
         if canBeInt:
             self.data['carrierCargo']=value
@@ -654,7 +669,9 @@ class userInterface():
         try:
             value=int(value)
             canBeInt=True
-        except:
+        except Exception as e:
+            if self.debug:
+                messagebox.showerror("Error", e)
             pass
         if canBeInt:
             self.data['shipCargo']=value
