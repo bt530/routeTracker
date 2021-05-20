@@ -1,3 +1,5 @@
+from RouteData import RouteData
+
 import tkinter as tk
 import ctypes
 import logging
@@ -140,8 +142,8 @@ class UserInterface:
                         self.log.info("Jumped to " + self.logReader.route_data.currentSystem)
                         self.nextSystem = 'unknown'
                         for i in range(self.position, len(self.currentFileData) - 1):
-                            self.log.debug(i)
-                            self.log.debug(ui.currentFileData[i])
+                            self.log.debug('Processing %d', i)
+                            self.log.debug(self.currentFileData[i])
                             if self.currentFileData[i][0] == self.logReader.route_data.currentSystem:
 
                                 self.log.info('copied ' + self.nextSystem + ' to clipboard')
@@ -206,7 +208,7 @@ class UserInterface:
             self.data["current file"] = self.currentFile
         if self.currentFile != '':
             self.log.debug('Current file: ' + self.currentFile)
-            self.log.debug('Data: ' + self.data)
+            self.log.debug('Data: ' + str(self.data))
             if self.currentFile in list(self.data['route positions'].keys()):
                 self.position = self.data['route positions'][self.currentFile]
             else:
