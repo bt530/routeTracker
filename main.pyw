@@ -6,9 +6,13 @@ import logging
 import logging.config
 import yaml
 
-with open('logging.yaml', 'r') as f:
-    log_cfg = yaml.safe_load(f.read())
-logging.config.dictConfig(log_cfg)
+try:
+    with open('logging.yaml', 'r') as f:
+        log_cfg = yaml.safe_load(f.read())
+    logging.config.dictConfig(log_cfg)
+except FileNotFoundError:
+    logging.basicConfig(filename="routeTracker.log", format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+                        level='DEBUG')
 
 
 # noinspection PyBroadException
