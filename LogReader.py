@@ -75,7 +75,7 @@ class LogReader:
                     if match % 5 != 0:
                         if data["event"] == "Cargo" and data["Vessel"] == "Ship":
                             cargo = data["Count"]
-                            self.log.debug('Ship Inventory: ' + str(cargo))
+                            self.log.info('Ship Inventory: ' + str(cargo))
                             self.route_data.shipInventory = cargo
                             match = match * 5
 
