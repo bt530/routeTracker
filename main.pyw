@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-from UI import *
-from LogReader import *
+from UI import UserInterface
+from LogReader import LogReader
 
 import logging
 import logging.config

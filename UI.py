@@ -1,3 +1,5 @@
+import threading
+
 from RouteData import RouteData
 
 import tkinter as tk
@@ -116,6 +118,7 @@ class UserInterface:
 
     def main_loop(self):
         time_loop = time.time()
+        log_thread = threading.Thread(target=self.logReader.update_log, daemon=True)
         while True:
             time.sleep(0.01)
             try:
@@ -128,14 +131,15 @@ class UserInterface:
                 current_time = time.time()
                 if current_time - self.logStart > self.logCheck and self.currentFileData is not None:
                     self.logStart = current_time
-                    try:
-                        self.logReader.update_log()
-                    except Exception:
-                        self.log.exception("Error updating log!")
-                        messagebox.showerror("Error updating logs.",
-                                             "There was an error updating the CMDR logs."
-                                             " See routeTracker.log for details")
-                        pass
+                    if not log_thread.is_alive():
+                        log_thread.start()
+                        time.sleep(2)
+                        if not log_thread.is_alive():
+                            messagebox.showerror("Error updating logs.",
+                                                 "There was an error updating the CMDR logs."
+                                                 " See routeTracker.log for details")
+                            raise ImportError("Could not read logs")
+
                     self.log.debug('Old system: %s, current system: %s', self.logReader.route_data.oldSystem,
                                    self.logReader.route_data.currentSystem)
                     if self.logReader.route_data.oldSystem != self.logReader.route_data.currentSystem:

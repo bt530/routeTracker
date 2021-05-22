@@ -2,11 +2,12 @@ import json
 import os
 import fnmatch
 import logging
+import time
+
 import dateutil.parser
+import tailer
 
 from RouteData import RouteData
-
-
 
 
 class LogReader:
@@ -24,74 +25,62 @@ class LogReader:
 
     def update_log(self):
         self.route_data.oldSystem = self.route_data.currentSystem
-        directory = fnmatch.filter(os.listdir(self.folder_location), "Journal.*.log");
-        directory.reverse()
-        self.log.debug("Directory content: " + str(directory))
 
-        match = 1
-        target_match = 7 * 5 * 3 * 2
-        active_file_reached = False
-        for i in range(len(directory)):
-            self.log.info("Processing file %d: %s", i, directory[i])
-            if match == target_match or (not self.route_data.firstCheck and active_file_reached):
-                break
+        while True:
+            directory = fnmatch.filter(os.listdir(self.folder_location), "Journal.*.log")
+            directory.reverse()
+            self.log.debug("Directory content: " + str(directory))
+            target_log_file = self.folder_location + "\\" + directory[0]
+            if self.route_data.checked != target_log_file:
+                self.log.debug("Checking log: " + target_log_file)
+                self.follow_log(target_log_file)
             else:
-                self.route_data.checked = directory[i]
-            if directory[i] == self.route_data.activeFile:
-                active_file_reached = True
-                self.log.debug('Active file reached')
+                self.log.debug("Elite not running, sleeping a bit")
+                time.sleep(10)
 
-            if directory[i].split('.')[-1] == 'log' or directory[i].split(',')[-1]:
-                if not active_file_reached:
-                    self.route_data.activeFile = directory[i]
-                    active_file_reached = True
-                    self.log.debug('Active file reached')
-                try:
-                    with open(self.folder_location + "\\" + directory[i], encoding="utf-8") as f:
-                        file_data = f.readlines()
+    def follow_log(self, filename):
+        self.route_data.activeFile = filename
+        file_handle = open(filename)
+        all_lines = file_handle.readlines()
+        for line in all_lines:
+            self.process_line(line)
+            if self.route_data.checked == self.route_data.activeFile:
+                break
+        if self.route_data.checked != self.route_data.activeFile:
+            for line in tailer.follow(file_handle):
+                self.process_line(line)
+                if self.route_data.checked == self.route_data.activeFile:
+                    break
 
-                except Exception:
-                    file_data = {}
-                    self.log.exception('Error reading file ' + self.folder_location + "\\" + directory[i])
-
-                for line in file_data:
-                    data = json.loads(line)
-
-                    if match % 2 != 0:
-                        if data["event"] == "CarrierJump" or data["event"] == "FSDJump":
-                            system = data["StarSystem"]
-                            self.log.info("Found current star system: " + system)
-                            match = match * 2
-
-                    if match % 3 != 0:
-                        if data["event"] == "CarrierJumpRequest":
-                            t = data["timestamp"]
-                            self.log.debug("CarrierJumpRequest: extracted " + t)
-                            t = dateutil.parser.parse(t)
-                            self.log.info("CarrierJumpRequest: found timestamp " + str(t))
-                            self.route_data.lastJumpRequest = t.timestamp()
-                            match = match * 3
-
-                    if match % 5 != 0:
-                        if data["event"] == "Cargo" and data["Vessel"] == "Ship":
-                            cargo = data["Count"]
-                            self.log.info('Ship Inventory: ' + str(cargo))
-                            self.route_data.shipInventory = cargo
-                            match = match * 5
-
-                    if match % 7 != 0:
-                        if data["event"] == "CarrierStats":
-                            fuel = data["FuelLevel"]
-                            self.route_data.carrierFuel = fuel
-                            self.log.info('Carrier fuel: ' + str(fuel))
-                            cargo = data["SpaceUsage"]["Cargo"]
-                            self.log.info('Carrier cargo: ' + str(cargo))
-                            self.route_data.carrierInventory = cargo
-                            match = match * 7
-                    if match == target_match:
-                        break
-
-        self.route_data.firstCheck = False
+    def process_line(self, line):
+        data = json.loads(line)
+        if data["event"] == "Shutdown":
+            # we are at the end of the file, Elite was shutdown
+            self.route_data.checked = self.route_data.activeFile
+            self.log.info("Elite Dangerous shutdown detected. Waiting for a newer log file.")
+            # stop following the log and wait for a newer one
+        if data["event"] == "CarrierJump" or data["event"] == "FSDJump" or data["event"] == "Location":
+            system = data["StarSystem"]
+            self.log.info("Found current star system: " + system)
+            self.route_data.currentSystem = system
+        if data["event"] == "CarrierJumpRequest":
+            t = data["timestamp"]
+            self.log.debug("CarrierJumpRequest: extracted " + t)
+            t = dateutil.parser.parse(t)
+            self.log.info("CarrierJumpRequest: found timestamp " + str(t))
+            self.route_data.lastJumpRequest = t.timestamp()
+            self.route_data.destinationSystem = data["SystemName"]
+        if data["event"] == "Cargo" and data["Vessel"] == "Ship":
+            cargo = data["Count"]
+            self.log.info('Ship Inventory: ' + str(cargo))
+            self.route_data.shipInventory = cargo
+        if data["event"] == "CarrierStats":
+            fuel = data["FuelLevel"]
+            self.route_data.carrierFuel = fuel
+            self.log.info('Carrier fuel: ' + str(fuel))
+            cargo = data["SpaceUsage"]["Cargo"]
+            self.log.info('Carrier cargo: ' + str(cargo))
+            self.route_data.carrierInventory = cargo
 
 
 if __name__ == '__main__':

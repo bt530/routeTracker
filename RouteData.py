@@ -3,10 +3,10 @@ from dataclasses import dataclass
 
 @dataclass(frozen=False)
 class RouteData:
-    firstCheck = True
     checked = None
     activeFile = None
     currentSystem = 'unknown'
+    destinationSystem = 'unknown'
     carrierFuel = 0
     carrierInventory = 0
     shipInventory = 0
