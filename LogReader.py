@@ -81,6 +81,14 @@ class LogReader:
             cargo = data["SpaceUsage"]["Cargo"]
             self.log.info('Carrier cargo: ' + str(cargo))
             self.route_data.carrierInventory = cargo
+        if data["event"] == "CarrierDepositFuel":
+            fuel = data["Total"]
+            self.route_data.carrierFuel = fuel
+            self.log.info('Carrier fuel: ' + str(fuel))
+        if data["event"] == "CarrierJumpCancelled":
+            self.log.info('Carrier jump cancelled!')
+            self.route_data.destinationSystem = None
+            self.route_data.lastJumpRequest = None
 
 
 if __name__ == '__main__':

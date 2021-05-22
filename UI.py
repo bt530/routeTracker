@@ -289,8 +289,11 @@ class UserInterface:
 
         self.canvas.create_rectangle(x + 340, y, x + 500, y + 30, fill='black')
 
-        time_since = time.time() - self.logReader.route_data.lastJumpRequest
-        time_since = self.maxCountdown - time_since
+        if self.logReader.route_data.lastJumpRequest is not None:
+            time_since = time.time() - self.logReader.route_data.lastJumpRequest
+            time_since = self.maxCountdown - time_since
+        else:
+            time_since = 0
 
         if time_since > 0:
             if time_since < 10 and self.data['alarm']:
