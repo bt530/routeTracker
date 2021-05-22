@@ -46,8 +46,8 @@ class logReader():
                 self.checked=directory[i]
             if directory[i] == self.activeFile:
                 activeFileReached=True
-
-            if directory[i].split('.')[-1] == 'log' or directory[i].split(',')[-1]:
+            splitCheck=directory[i].split('.')
+            if splitCheck[-1] == 'log' and splitCheck[0] == 'Journal':
                 if activeFileReached == False:
                     self.activeFile=directory[i]
                     activeFileReached=True
