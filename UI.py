@@ -31,7 +31,7 @@ class userInterface():
         #self.logReader=reader
         self.maxCountdown = 60 * 21
         
-        self.logCheck = 30
+        self.logCheck = 5
         self.logReader=reader
 
         self.scroll=0
@@ -227,6 +227,8 @@ class userInterface():
                 self.currentFileData = [i.split(",") for i in self.currentFileData]
                 #print(currentFileData)
                 del self.currentFileData[0]
+                if [''] in self.currentFileData:
+                    self.currentFileData.remove([''])
 
                 self.stopLocations=[]
                 for i in range(len(self.currentFileData)-1):
@@ -412,15 +414,18 @@ class userInterface():
             horPos=self.position/len(self.currentFileData)*480+20
             self.canvas.create_polygon(x+horPos-5,y+85,x+horPos,y+75,x+horPos+5,y+85,fill='#00ff00',outline='#00ff00')
 
-            reqFuel=self.currentFileData[self.position][4]
-            
-            reqFuel=int(reqFuel)
-            if reqFuel > 0:
-                reqFuel += 1000
-            else:
-                for i in range(self.position,len(self.currentFileData)):
-                    reqFuel += int(self.currentFileData[i][5])
-                reqFuel -= int(self.currentFileData[self.position][5])
+            try:
+                reqFuel=self.currentFileData[self.position][4]
+                
+                reqFuel=int(reqFuel)
+                if reqFuel > 0:
+                    reqFuel += 1000
+                else:
+                    for i in range(self.position,len(self.currentFileData)):
+                        reqFuel += int(self.currentFileData[i][5])
+                    reqFuel -= int(self.currentFileData[self.position][5])
+            except IndexError:
+                reqFuel='Error'
 
             tankFuel=self.logReader.carrierFuel
             shipFuel=self.logReader.shipInventory-self.data['shipCargo']
@@ -434,6 +439,8 @@ class userInterface():
 
 
             fuelTotal=tankFuel + shipFuel + carrierFuel
+            if reqFuel == 'Error':
+                reqFuel=0
 
             width=max(fuelTotal,reqFuel) / 480
             

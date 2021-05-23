@@ -14,8 +14,8 @@ class logReader():
         
         #self.folderLocation='C:\\Users\\'+os.getlogin()+'\\Saved Games\\Frontier Developments\\Elite Dangerous'
         self.folderLocation=os.environ['USERPROFILE'] + '\\Saved Games\\Frontier Developments\\Elite Dangerous'
-        print(os.environ['USERPROFILE'])
-        print(self.folderLocation)
+        #print(os.environ['USERPROFILE'])
+        #print(self.folderLocation)
 
     def resetValues(self):
         self.firstCheck=True
@@ -33,13 +33,13 @@ class logReader():
         self.oldSystem=self.currentSystem
         directory=os.listdir(self.folderLocation)
         directory.reverse()
-        #print(directory)
+        ##print(directory)
         
         match=1
         targetMatch=11*7*5*3*2
         activeFileReached=False
         for i in range(len(directory)):
-            print(i)
+            #print(i)
             if match == targetMatch or (not self.firstCheck and activeFileReached):
                 break
             else:
@@ -58,13 +58,16 @@ class logReader():
                 
                 except:
                     scanningFile=''
-                    print('error reading file '+self.folderLocation+"\\"+directory[i])
-                #print(scanningFile)
+                    #print('error reading file '+self.folderLocation+"\\"+directory[i])
+                ##print(scanningFile)
 
                 if match %2 != 0:
                     scan=scanningFile
+
+                    
                     scan="generalJump".join(scan.split('"event":"CarrierJump"'))
                     scan="generalJump".join(scan.split('"event":"FSDJump"'))
+                    scan="generalJump".join(scan.split('"event":"Location"'))
                     try:
                         scan=scan.split('generalJump')
                         if len(scan) != 1:
@@ -78,6 +81,7 @@ class logReader():
                         
                             match=match*2
                     except IndexError:
+                        print('error')
                         pass
 
 
@@ -90,11 +94,11 @@ class logReader():
 
                     try:
                         scan=scan.split('Z", "event":"CarrierJumpRequest"')
-                        print(len(scan))
+                        #print(len(scan))
                         if len(scan) != 1:
                             
                             scan=scan[-2].split('"timestamp":"')[-1]
-                            print(scan)
+                            #print(scan)
                             scan=scan.split('T')
                             scan[0]=scan[0].split('-')
                             scan[1]=scan[1].split(':')
@@ -102,10 +106,10 @@ class logReader():
 
                             
                             t = datetime.datetime(int(scan[0][0]), int(scan[0][1]), int(scan[0][2]), int(scan[1][0]), int(scan[1][1]), int(scan[1][2]))
-                            print(t)
+                            #print(t)
                             
                             t = t.replace(tzinfo=datetime.timezone.utc).timestamp()
-                            print(t)
+                            #print(t)
                             self.lastJumpRequest=t
                             
                         
@@ -129,6 +133,7 @@ class logReader():
                                 
                                 scan=scan[-1].split(' ')[0]
                                 print('cargo',scan)
+                                scan=scan.split(',')[0]
 
                                 
 
@@ -138,14 +143,14 @@ class logReader():
                                 except:
                                     self.shipInventory=0
                                     print('ship inv match error')
-                                    print(scan)
+                                    #print(scan)
                                 
                             
 
                             
                                 match=match*5
                     except IndexError:
-                        print('error')
+                        #print('error')
                         pass
                 if match %7 != 0:
 
@@ -156,8 +161,8 @@ class logReader():
                         if len(scan) != 1:
                             
                             scan=scan[-1].split('"FuelLevel":')[1].split(',')[0]
-                            print('carrier fuel',scan)
-                            print(directory[i])
+                            #print('carrier fuel',scan)
+                            #print(directory[i])
 
                             
 
@@ -166,15 +171,15 @@ class logReader():
                                 self.carrierFuel=int(scan)
                             except:
                                 self.carrierFuel=0
-                                print('carrier fuel match error')
-                                print(scan)
+                                #print('carrier fuel match error')
+                                #print(scan)
                             
                         
 
                         
                             match=match*7
                     except IndexError:
-                        print('error')
+                        #print('error')
                         pass
                 if match %11 != 0:
 
@@ -185,7 +190,7 @@ class logReader():
                         if len(scan) != 1:
                             
                             scan=scan[-1].split('"Cargo":')[1].split(',')[0]
-                            print('carrier cargo',scan)
+                            #print('carrier cargo',scan)
 
                             
 
@@ -194,15 +199,15 @@ class logReader():
                                 self.carrierInventory=int(scan)
                             except:
                                 self.carrierFuel=0
-                                print('carrier cargo match error')
-                                print(scan)
+                                #print('carrier cargo match error')
+                                #print(scan)
                             
                         
 
                         
                             match=match*11
                     except IndexError:
-                        print('error')
+                        #print('error')
                         pass
 
                     
@@ -210,9 +215,15 @@ class logReader():
         self.firstCheck=False
 
 if __name__ == '__main__':
+    import time
     reader=logReader()
     reader.updateLog()
-        
+    """
+    for i in range(100):
+        start=time.time()
+        reader.updateLog()
+        print(time.time()-start)
+    """
 
 
 
