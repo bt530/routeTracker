@@ -16,9 +16,7 @@ class POINT(ctypes.Structure):
 def mousePosition():
     pt = POINT()
     ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
-    if pt.x== 0:
-        if pt.y == 0:
-            print(0/0)
+
     return int(pt.x),int(pt.y)
 class userInterface():
 
@@ -30,6 +28,7 @@ class userInterface():
         self.debug=debug
         #self.logReader=reader
         self.maxCountdown = 60 * 21
+        
         
         self.logCheck = 5
         self.logReader=reader
@@ -45,7 +44,7 @@ class userInterface():
         self.countdownStart=time.time()
         self.logStart=0
 
-
+        self.currentFileDataKeys={}
         self.currentFileData = [['unknown']]
         self.system = None
         self.nextSystem = 'unknown'
@@ -114,7 +113,8 @@ class userInterface():
                     try:
                         self.settingsWindow.destroy()
                     except:
-                        print('settings window does not yet exist')
+                        #print('settings window does not yet exist')
+                        pass
                     break
                 #self.menu.update()
                 currentTime=time.time()
@@ -126,22 +126,22 @@ class userInterface():
                         if self.debug:
                             messagebox.showerror("Error", e)
                         pass
-                    print(self.logReader.oldSystem,self.logReader.currentSystem)
+                    #print(self.logReader.oldSystem,self.logReader.currentSystem)
                     if self.logReader.oldSystem != self.logReader.currentSystem:
-                        print("Jumped to "+self.logReader.currentSystem)
+                        #print("Jumped to "+self.logReader.currentSystem)
                         self.nextSystem='unknown'
                         for i in range(self.position,len(self.currentFileData)-1):
-                            #print(i)
-                            #print(ui.currentFileData[i])
-                            if self.currentFileData[i][0] == self.logReader.currentSystem:
+                            ##print(i)
+                            ##print(ui.currentFileData[i])
+                            if self.currentFileData[i][self.currentFileDataKeys['System Name']] == self.logReader.currentSystem:
 
-                                print('copied ' + self.nextSystem + ' to clipboard')
-                                if self.currentFileData[i+1][0] == self.currentFileData[i][0]:
+                                #print('copied ' + self.nextSystem + ' to clipboard')
+                                if self.currentFileData[i+1][self.currentFileDataKeys['System Name']] == self.currentFileData[i][self.currentFileDataKeys['System Name']]:
                                     self.position=i+1
-                                    print('double')
+                                    #print('double')
                                 else:
                                     self.position=i
-                                self.nextSystem=self.currentFileData[self.position+1][0]
+                                self.nextSystem=self.currentFileData[self.position+1][self.currentFileDataKeys['System Name']]
                                 pyperclip.copy(self.nextSystem)
                                 self.data['route positions'][self.currentFile] = self.position
                                 self.saveData()
@@ -149,7 +149,7 @@ class userInterface():
                                 self.clear()
                                 """
                                 except Exception as e:
-                                    print(e)"""
+                                    #print(e)"""
                                 break
                     
 
@@ -182,7 +182,7 @@ class userInterface():
                         elif topSet != 1:
                             self.window.attributes('-topmost', 1)
                             topSet=1
-                        #print(topSet)
+                        ##print(topSet)
                     """
                     
                 """
@@ -191,7 +191,7 @@ class userInterface():
                         break
                     else:
                         self.exiting=True
-                        print(e)"""
+                        #print(e)"""
 
                 try:
                     self.settingsWindow.update()
@@ -208,8 +208,8 @@ class userInterface():
             self.currentFile = askopenfilename()
             self.data["current file"] = self.currentFile
         if self.currentFile != '':
-            print(self.currentFile)
-            print(self.data)
+            #print(self.currentFile)
+            #print(self.data)
             if self.currentFile in list(self.data['route positions'].keys()):
                 self.position = self.data['route positions'][self.currentFile]
             else:
@@ -225,17 +225,21 @@ class userInterface():
 
                 self.currentFileData = self.currentFileData.split("\n")
                 self.currentFileData = [i.split(",") for i in self.currentFileData]
-                #print(currentFileData)
+                ##print(currentFileData)
+
+                self.currentFileDataKeys={}
+                for i in range(len(self.currentFileData[0])):
+                    self.currentFileDataKeys[self.currentFileData[0][i]] = i
                 del self.currentFileData[0]
                 if [''] in self.currentFileData:
                     self.currentFileData.remove([''])
 
                 self.stopLocations=[]
                 for i in range(len(self.currentFileData)-1):
-                    if self.currentFileData[i][0] == self.currentFileData[i+1][0]:
+                    if self.currentFileData[i][self.currentFileDataKeys['System Name']] == self.currentFileData[i+1][self.currentFileDataKeys['System Name']]:
                         self.stopLocations.append(i)
-                    #print(self.currentFileData[i])
-                #print(self.stopLocations)
+                    ##print(self.currentFileData[i])
+                ##print(self.stopLocations)
             except FileNotFoundError as e:
                 
                     messagebox.showerror("Import Error", e)
@@ -372,12 +376,12 @@ class userInterface():
                     
                     self.canvas.create_rectangle(x+horPos-8,y+45,x+500,y+80,fill='#111111',outline='#111111')
                     self.canvas.create_line(x+horPos,y+70,x+horPos,y+80,fill='orange')
-                    self.canvas.create_text(x+horPos,y+60,text=self.currentFileData[i][0]+"   ",font="Ebrima 8 bold",fill='orange',anchor='w')
+                    self.canvas.create_text(x+horPos,y+60,text=self.currentFileData[i][self.currentFileDataKeys['System Name']]+"   ",font="Ebrima 8 bold",fill='orange',anchor='w')
                 else:
                     
                     self.canvas.create_rectangle(x+horPos-8,y+80,x+500,y+120,fill='#111111',outline='#111111')
                     self.canvas.create_line(x+horPos,y+80,x+horPos,y+90,fill='orange')
-                    self.canvas.create_text(x+horPos,y+95,text= self.currentFileData[i][0]+"   ",font="Ebrima 8 bold",fill='orange',anchor='w')
+                    self.canvas.create_text(x+horPos,y+95,text= self.currentFileData[i][self.currentFileDataKeys['System Name']]+"   ",font="Ebrima 8 bold",fill='orange',anchor='w')
                     
                 above=not above
             horPos=500
@@ -386,13 +390,13 @@ class userInterface():
                 
                 self.canvas.create_rectangle(x+horPos-10,y+45,x+500,y+80,fill='#111111',outline='#111111')
                 self.canvas.create_line(x+horPos,y+70,x+horPos,y+80,fill='orange')
-                self.canvas.create_text(x+horPos,y+60,text= "   "+self.currentFileData[-2][0],font="Ebrima 8 bold",fill='orange',anchor='e')
+                self.canvas.create_text(x+horPos,y+60,text= "   "+self.currentFileData[-1][self.currentFileDataKeys['System Name']],font="Ebrima 8 bold",fill='orange',anchor='e')
             else:
                 
                 self.canvas.create_rectangle(x+horPos-10,y+80,x+500,y+120,fill='#111111',outline='#111111')
                 self.canvas.create_line(x+horPos,y+80,x+horPos,y+90,fill='orange')
-                self.canvas.create_text(x+horPos,y+95,text= "   "+self.currentFileData[-2][0],font="Ebrima 8 bold",fill='orange',anchor='e')
-            #print(self.stopLocations)
+                self.canvas.create_text(x+horPos,y+95,text= "   "+self.currentFileData[-1][self.currentFileDataKeys['System Name']],font="Ebrima 8 bold",fill='orange',anchor='e')
+            ##print(self.stopLocations)
             self.canvas.create_line(x+20,y+80,x+500,y+80,fill='orange',width=2)
 
             self.canvas.create_oval(x+15,y+75,x+25,y+85,fill='orange',outline='orange')
@@ -409,21 +413,21 @@ class userInterface():
             for i in self.stopLocations:
                 horPos=i/len(self.currentFileData)*480+20
                 self.canvas.create_oval(x+horPos-3,y+77,x+horPos+3,y+83,fill='orange',outline='orange')
-                #print('h',horPos)
-            #print(self.stopLocations)
+                ##print('h',horPos)
+            ##print(self.stopLocations)
             horPos=self.position/len(self.currentFileData)*480+20
             self.canvas.create_polygon(x+horPos-5,y+85,x+horPos,y+75,x+horPos+5,y+85,fill='#00ff00',outline='#00ff00')
 
             try:
-                reqFuel=self.currentFileData[self.position][4]
+                reqFuel=self.currentFileData[self.position][self.currentFileDataKeys['Tritium in market']]
                 
                 reqFuel=int(reqFuel)
                 if reqFuel > 0:
                     reqFuel += 1000
                 else:
                     for i in range(self.position,len(self.currentFileData)):
-                        reqFuel += int(self.currentFileData[i][5])
-                    reqFuel -= int(self.currentFileData[self.position][5])
+                        reqFuel += int(self.currentFileData[i][self.currentFileDataKeys['Fuel Used']])
+                    reqFuel -= int(self.currentFileData[self.position][self.currentFileDataKeys['Fuel Used']])
             except IndexError:
                 reqFuel='Error'
 
@@ -479,7 +483,7 @@ class userInterface():
             
             for i in range(length):
                 if self.position+self.scroll+i < len(self.currentFileData) - 1:
-                    if self.currentFileData[self.position+self.scroll+i][0] == pyperclip.paste():
+                    if self.currentFileData[self.position+self.scroll+i][self.currentFileDataKeys['System Name']] == pyperclip.paste():
                         boxFill='green'
                         textFill='black'
                     elif self.scroll+i == 0:
@@ -494,7 +498,7 @@ class userInterface():
                         textFill='orange'
 
                     self.canvas.create_rectangle(x+15,y+startY + verticalSpacing*i,x+490,y+startY + verticalSpacing*i+boxHeight,fill=boxFill,outline='orange')
-                    self.canvas.create_text(x+17,y+startY + verticalSpacing*i,text=self.currentFileData[self.position+self.scroll+i][0],font="Ebrima 12 bold",fill=textFill,anchor='nw')
+                    self.canvas.create_text(x+17,y+startY + verticalSpacing*i,text=self.currentFileData[self.position+self.scroll+i][self.currentFileDataKeys['System Name']],font="Ebrima 12 bold",fill=textFill,anchor='nw')
             self.canvas.create_rectangle(x+497,y+startY,x+505,y+startY + self.scrollHeight,fill='black',outline='orange')
 
             
@@ -516,12 +520,12 @@ class userInterface():
         except Exception as e:
             if self.debug:
                 messagebox.showerror("Error", e)
-            #print('error creating dashboard',e)
+            ##print('error creating dashboard',e)
             
             self.canvas.create_rectangle(x,y+35,x+520,y+600,fill='black',outline='orange')
             self.canvas.create_text(x+260,y+250,text= traceback.format_exc(),font="Ebrima 13 bold",fill='red')
     def mouseDown(self,values):
-        #print(values)
+        ##print(values)
         self.startDrag=time.time()
         if self.scrollTop[0] <= values.x and values.x <= self.scrollBottom[0] and self.scrollTop[1] <= values.y and self.scrollBottom[1] >= values.y and not self.dragging:
 
@@ -547,11 +551,11 @@ class userInterface():
             
             if relX < 150:
                 pyperclip.copy(self.logReader.currentSystem)
-                print('copied ' + self.logReader.currentSystem + ' to clipboard')
+                #print('copied ' + self.logReader.currentSystem + ' to clipboard')
                 
             elif relX > 190 and relX <340:
                 pyperclip.copy(self.nextSystem)
-                print('copied ' + self.nextSystem + ' to clipboard')
+                #print('copied ' + self.nextSystem + ' to clipboard')
                 
             #more
             elif relX > 420 and relX <440:
@@ -582,7 +586,7 @@ class userInterface():
         elif time.time()-self.startDrag < 0.3 and 15 < relX and 490 > relX:
             proportion = (values.y - self.scrollTop[1])/self.scrollHeight
             clickedOn=proportion * self.scrollLength
-            pyperclip.copy(self.currentFileData[math.floor(self.position + self.scroll + clickedOn)][0])
+            pyperclip.copy(self.currentFileData[math.floor(self.position + self.scroll + clickedOn)][self.currentFileDataKeys['System Name']])
                 
                 
 
@@ -602,8 +606,8 @@ class userInterface():
             self.root.destroy()
             self.window.destroy()
         except Exception as e:
-            
-            print('no root window exists yet')
+            pass
+            #print('no root window exists yet')
 
         self.hidden=False
         user32 = ctypes.windll.user32
@@ -650,7 +654,7 @@ class userInterface():
 
 
         self.data['logLocation'] = askdirectory()
-        print(self.data['logLocation'])
+        #print(self.data['logLocation'])
         if self.data['logLocation'] != '':
             self.logReader.folderLocation=self.data['logLocation']
         else:
@@ -688,7 +692,8 @@ class userInterface():
         try:
             self.settingsWindow.destroy()
         except:
-            print('settings window does not yet exist')
+            pass
+            #print('settings window does not yet exist')
 
         self.settingsWindow=tk.Tk()
         self.settingsWindow.title('Settings')
@@ -783,7 +788,7 @@ if __name__ == '__main__':
     reader=logReader()
 
     ui=userInterface(reader=reader)
-    print('t')
+    #print('t')
 
     ui.mainLoop()
 
@@ -793,6 +798,6 @@ if __name__ == '__main__':
 
 
 
-    #print(countdownMessage)
+    ##print(countdownMessage)
 
 #window.mainloop()
