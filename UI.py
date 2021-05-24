@@ -164,10 +164,8 @@ class userInterface():
                 elif self.scrolling and self.scrollLength < len(self.currentFileData):
                     proportion = (y - self.barCentre - self.scrollTop[1])/self.scrollHeight
                     self.scroll = round(proportion * len(self.currentFileData) - self.position)
-                    if self.scroll + self.position < 0:
-                        self.scroll = -self.position
-                    if self.scroll + self.position >= len(self.currentFileData) - self.scrollLength:
-                        self.scroll = len(self.currentFileData) - self.position -1 - self.scrollLength
+                    self.limitScroll()
+
                     self.clear()
                 elif currentTime - timeLoop >1:
                     self.clear()
@@ -480,10 +478,10 @@ class userInterface():
             barHeight = min(length/len(self.currentFileData) * self.scrollHeight,self.scrollHeight)
             self.barCentre=barHeight/2
             barPosition = y+(self.position+self.scroll)/len(self.currentFileData) * self.scrollHeight + startY
-            
+            clipboard=pyperclip.paste()
             for i in range(length):
-                if self.position+self.scroll+i < len(self.currentFileData) - 1:
-                    if self.currentFileData[self.position+self.scroll+i][self.currentFileDataKeys['System Name']] == pyperclip.paste():
+                if self.position+self.scroll+i < len(self.currentFileData):
+                    if self.currentFileData[self.position+self.scroll+i][self.currentFileDataKeys['System Name']] == clipboard:
                         boxFill='green'
                         textFill='black'
                     elif self.scroll+i == 0:
@@ -596,11 +594,14 @@ class userInterface():
         
         if self.scrollLength < len(self.currentFileData):
             self.scroll += round(-values.delta/100)
-            if self.scroll + self.position < 0:
-                self.scroll = -self.position
-            if self.scroll + self.position >= len(self.currentFileData) - self.scrollLength:
-                self.scroll = len(self.currentFileData) - self.position -1 - self.scrollLength
-            self.clear()
+        self.limitScroll()
+        self.clear()
+    def limitScroll(self):
+        if self.scroll + self.position < 0:
+            self.scroll = -self.position
+        if self.scroll + self.position >= len(self.currentFileData) - self.scrollLength:
+            self.scroll = len(self.currentFileData) - self.position - self.scrollLength
+        
     def createWindow(self,onTop=1):
         try:
             self.root.destroy()
