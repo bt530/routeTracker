@@ -409,7 +409,7 @@ class userInterface():
                 if diff >= 0:
                     self.canvas.create_text(x+220,y+130,text= "| To Waypoint: "+str(diff),font="Ebrima 13 bold",fill='orange',anchor='w')
                     break
-            self.canvas.create_text(x+380,y+130,text= "| Left: "+str(len(self.currentFileData)-self.position),font="Ebrima 13 bold",fill='orange',anchor='w')
+            self.canvas.create_text(x+380,y+130,text= "| Left: "+str(len(self.currentFileData)-self.position-1),font="Ebrima 13 bold",fill='orange',anchor='w')
             for i in self.stopLocations:
                 horPos=i/len(self.currentFileData)*480+20
                 self.canvas.create_oval(x+horPos-3,y+77,x+horPos+3,y+83,fill='orange',outline='orange')
