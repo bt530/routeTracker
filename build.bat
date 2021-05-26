@@ -1,0 +1,1 @@
+pyinstaller main.pyw --onefile --icon=carrier.ico --add-binary "carrier.ico;files" -i carrier.ico
