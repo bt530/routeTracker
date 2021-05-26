@@ -1,0 +1,6 @@
+-r requirements.txt
+mypy
+pytest
+pytest-cov
+pytest-mypy
+pylint

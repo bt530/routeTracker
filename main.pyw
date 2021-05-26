@@ -1,10 +1,11 @@
-from UI import *
-from logReader import *
-import traceback
+from routeTracker import logReader, UI
+from loguru import logger
+
+# noinspection PyBroadException
 try:
-    reader=logReader()
-    ui=userInterface(reader=reader)
+    logger.add(sink='routeTrackerErrorLog.txt')
+    reader = logReader.logReader()
+    ui = UI.userInterface(reader=reader)
     ui.mainLoop()
-except Exception as e:
-    with open('routeTrackerErrorLog.txt','w') as f:
-        f.write(traceback.format_exc())
+except Exception:
+    logger.exception("Unhandled exception")
