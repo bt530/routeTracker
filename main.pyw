@@ -1,12 +1,11 @@
 from UI import *
 from logReader import *
-import traceback
+from loguru import logger
 
 try:
+    logger.add(sink='routeTrackerErrorLog.txt')
     reader = logReader()
     ui = UserInterface(reader=reader)
     ui.mainLoop()
-except:
-    print(traceback.format_exc())
-    with open('routeTrackerErrorLog.txt', 'w') as f:
-        f.write(traceback.format_exc())
+except Exception:
+    logger.exception("Unhandled Exception")
