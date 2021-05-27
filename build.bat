@@ -1,1 +1,1 @@
-pyinstaller main.spec
+pyinstaller routeTracker/main.pyw --onefile --icon=routeTracker/carrier.ico --add-binary "routeTracker/carrier.ico;files" -i routeTracker/carrier.ico
