@@ -34,5 +34,6 @@ The next system should automatically get copied to your clipboard each time you 
 * Create a `venv` for the project: `C:\Python37\python -m venv venv`
 * Activate the `venv`: `venv\Scripts\activate`
 * `pip install -r requirements.txt`
+* In order to build to exe theres a further dependency with `pip install pyinstaller`
 
 You're welcome to do whatever you want to the code if you feel like it, however I typically will only merge pull requests for small changes/fixes as I don't have the time to look through everything.
