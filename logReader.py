@@ -170,7 +170,7 @@ class logReader():
                             try:
                                 self.carrierInventory = int(scan)
                             except:
-                                self.carrierFuel = 0
+                                self.carrierInventory = 0
                                 # #print('carrier cargo match error')
                                 # #print(scan)
 
